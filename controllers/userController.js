@@ -22,13 +22,10 @@ exports.signUp = async (req, res, next) => {
             newUser.accessToken = accessToken;
             await newUser.save();
             res.json({
-                data: newUser,
-                accessToken
+                data: newUser
             })
         } else{
-            return res.status(401).json({
-                error: "User Already Exists"
-            });
+            next(new Error("User Already Exists"))
         }
     } catch (error) {
         next(error)
@@ -37,6 +34,7 @@ exports.signUp = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
+        console.log(req.body);
         const user = await User.findOne({ email });
         if (!user) return next(new Error('Email does not exist'));
         const validPassword = await validatePassword(password, user.password);
@@ -46,8 +44,7 @@ exports.login = async (req, res, next) => {
         });
         await User.findByIdAndUpdate(user._id, { accessToken })
         res.status(200).json({
-            data: { email: user.email, role: user.role },
-            accessToken
+            data: { email: user.email, role: user.role,accessToken },
         })
     } catch (error) {
         next(error);

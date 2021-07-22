@@ -8,10 +8,10 @@ router.post('/login', login);
 
 router.get('/user/:userId', allowIfLoggedin, getUser);
 
-router.get('/users', allowIfLoggedin, grantAccess('readAny', 'profile'), getUsers);
+router.get('/users', allowIfLoggedin,  getUsers);
 
-router.put('/user/:userId', allowIfLoggedin, grantAccess('updateAny', 'profile'), updateUser);
+router.put('/user/:userId', allowIfLoggedin,  updateUser);
 
-router.delete('/user/:userId', allowIfLoggedin, grantAccess('deleteAny', 'profile'), deleteUser);
+router.delete('/user/:userId', allowIfLoggedin,  deleteUser);
 
 module.exports = router;

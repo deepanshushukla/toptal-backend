@@ -14,8 +14,8 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-const errorHandler = async (err, req, res, next) => {
-     res.status(500).json({ error: err });
+const errorHandler =  (err, req, res, next) => {
+     res.status(500).json({ error: err.message });
 }
 mongoose
     .connect('mongodb://localhost:27017/toptal-housing')
@@ -23,8 +23,14 @@ mongoose
         console.log('Connected to the Database successfully');
     });
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded());
+app.use(express.json());
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 app.use(async (req, res, next) => {
     if (req.headers["Authorization"]) {
         const accessToken = req.headers["Authorization"];
@@ -42,9 +48,7 @@ app.use(async (req, res, next) => {
 
 app.use('/', routes);
 
-app.use(function (req, res, next) {
-    res.status(404).json({error:"Sorry can't find that!"})
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log('Server is listening on Port:', PORT)
