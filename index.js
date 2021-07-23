@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path')
 const User = require('./models/userModel')
 const routes = require('./routes/route.js');
+const cors = require('cors');
 
 require("dotenv").config({
     path: path.join(__dirname, ".env")
@@ -25,15 +26,11 @@ mongoose
 
 app.use(express.urlencoded());
 app.use(express.json());
-
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
+app.use(cors());
 app.use(async (req, res, next) => {
-    if (req.headers["Authorization"]) {
-        const accessToken = req.headers["Authorization"];
+    console.log(req.headers)
+    if (req.headers["authorization"]) {
+        const accessToken = req.headers["authorization"];
         const { userId, exp } = await jwt.verify(accessToken, process.env.JWT_SECRET);
         // Check if token has expired
         if (exp < Date.now().valueOf() / 1000) {
