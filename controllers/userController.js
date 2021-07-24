@@ -1,23 +1,19 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const nodemailer = require("nodemailer");
 const userClass =  require('../helper/userClass');
- const  hashPassword = async (password) => {
+const { sendMail } =  require('../helper/mailer');
+var generatePassword = require('password-generator');
+
+const  hashPassword = async (password) => {
     return await bcrypt.hash(password, 10);
 }
 const validatePassword = async (plainPassword, hashedPassword) => {
     return await bcrypt.compare(plainPassword, hashedPassword);
-}
+};
+
 const UserJson = userClass.UserJson;
-var smtpTransport = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    auth: {
-        user: "",
-        pass: ""
-    }
-});
+
 exports.signUp = async (req, res, next) => {
     try {
         const { email, password, role, firstName, lastName, phoneNumber } = req.body;
@@ -43,9 +39,23 @@ exports.saveUser = async (req, res, next) => {
         const { email, role, firstName, lastName, phoneNumber } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
-            const newUser = new User({email, phoneNumber, firstName, lastName, role});
+            const tempPassword = generatePassword();
+            const mailOptions = {
+                to : email,
+                subject : 'Your account password',
+                text : `Your password is ${tempPassword}`
+            };
+            console.log(mailOptions)
+            const hashedPassword = await hashPassword(tempPassword);
+            console.log(hashedPassword)
+            const newUser = new User({email, phoneNumber, password: hashedPassword,firstName, lastName, role});
             await newUser.save();
-            res.json({data: new UserJson(newUser, false)})
+            sendMail(mailOptions, () => {
+                res.json({data: new UserJson(newUser, false),message:'Email has been Sent with password'})
+            }, (error) => {
+                console.log(error)
+                next(error);
+            });
         }else {
             next(new Error("User Already Exists"))
         }
@@ -56,7 +66,6 @@ exports.saveUser = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
-        console.log(req.body);
         const user = await User.findOne({ email });
         if (!user) return next(new Error('Email does not exist'));
         const validPassword = await validatePassword(password, user.password);
@@ -64,6 +73,7 @@ exports.login = async (req, res, next) => {
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
             expiresIn: "1d"
         });
+        user.accessToken = accessToken;
         await User.findByIdAndUpdate(user._id, { accessToken });
         res.status(200).json(
             {data: new UserJson(user,true)}
