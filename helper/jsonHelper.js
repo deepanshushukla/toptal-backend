@@ -1,5 +1,4 @@
-const UserJson =  function(user, withToken=false) {
-    console.log(user, "userDeta");
+ function UserJson (user, withToken=false) {
     this.id = user._id
     this.firstName = user.firstName;
     this.lastName = user.lastName;
@@ -11,16 +10,20 @@ const UserJson =  function(user, withToken=false) {
     }
 }; 
 
-module.exports.ApartmentJson =  function (apartment) {
+function ApartmentJson (apartment) {
     this.apartmentName = apartment.apartmentName;
-    this.description = apartment.description;
+    this.id = apartment._id || null;
+    this.apartmentDescription = apartment.apartmentDescription;
     this.floorAreaSize = apartment.floorAreaSize;
     this.pricePerMonth = apartment.pricePerMonth;
     this.numberOfRooms = apartment.numberOfRooms;
-    this.geolocation = apartment.geolocation;
+    this.geoLocation = apartment.geoLocation;
+    this.address = apartment.address;
     this.createdAt = apartment.createdAt;
-    this.owner = new UserJson(apartment.owner);
-    this.isSold = apartment.isSold;
+    if(apartment.owner){
+        this.owner = new UserJson(apartment.owner);
+    }
+    this.isRented = apartment.isRented;
 };
 
-module.exports.UserJson =  UserJson;
+module.exports =  {ApartmentJson,UserJson}

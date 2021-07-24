@@ -1,9 +1,11 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const userClass =  require('../helper/userClass');
+const { UserJson } =  require('../helper/jsonHelper');
+
+const userClass =  require('../helper/jsonHelper');
 const { sendMail } =  require('../helper/mailer');
-var generatePassword = require('password-generator');
+const generatePassword = require('password-generator');
 
 const  hashPassword = async (password) => {
     return await bcrypt.hash(password, 10);
@@ -11,9 +13,6 @@ const  hashPassword = async (password) => {
 const validatePassword = async (plainPassword, hashedPassword) => {
     return await bcrypt.compare(plainPassword, hashedPassword);
 };
-
-const UserJson = userClass.UserJson;
-
 exports.signUp = async (req, res, next) => {
     try {
         const { email, password, role, firstName, lastName, phoneNumber } = req.body;
@@ -112,7 +111,7 @@ exports.updateUser = async (req, res, next) => {
         const user = await User.findById(userId)
         res.status(200).json({
             data: new UserJson(user),
-            message: 'User has been updated'
+            message: 'User details has been updated'
         });
     } catch (error) {
         next(error)

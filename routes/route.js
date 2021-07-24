@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {signUp, login, allowIfLoggedin, getUser, grantAccess, 
     getUsers, updateUser, deleteUser, saveUser} = require('../controllers/userController');
-const {createApartmentDetails, getApartmentDetails} = require('../controllers/apartmentController');
+const {createApartments, getApartments,deleteApartment,updateApartment} = require('../controllers/apartmentController');
 
 router.post('/signup', signUp);
 
@@ -18,8 +18,13 @@ router.post('/users', allowIfLoggedin,  saveUser);
 
 router.delete('/users/:userId', allowIfLoggedin,  deleteUser);
 
-router.post('/apartments', allowIfLoggedin, createApartmentDetails);
+router.post('/apartments', allowIfLoggedin, createApartments);
 
-router.get('/apartments', allowIfLoggedin, getApartmentDetails);
+router.get('/apartments', allowIfLoggedin, getApartments);
+
+router.delete('/apartments/:id', allowIfLoggedin,  deleteApartment);
+
+router.put('/apartments/:id', allowIfLoggedin,  updateApartment);
+
 
 module.exports = router;
