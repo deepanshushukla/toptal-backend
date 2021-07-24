@@ -28,7 +28,6 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(cors());
 app.use(async (req, res, next) => {
-    console.log(req.headers)
     if (req.headers["authorization"]) {
         const accessToken = req.headers["authorization"];
         const { userId, exp } = await jwt.verify(accessToken, process.env.JWT_SECRET);
