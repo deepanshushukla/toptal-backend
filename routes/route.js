@@ -27,4 +27,5 @@ router.delete('/apartments/:id', allowIfLoggedin,  deleteApartment);
 router.put('/apartments/:id', allowIfLoggedin,  updateApartment);
 
 
+
 module.exports = router;

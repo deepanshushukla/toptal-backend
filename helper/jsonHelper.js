@@ -18,7 +18,6 @@ function ApartmentJson (apartment) {
     this.pricePerMonth = apartment.pricePerMonth;
     this.numberOfRooms = apartment.numberOfRooms;
     this.geoLocation = apartment.geoLocation;
-    this.address = apartment.address;
     this.createdAt = apartment.createdAt;
     if(apartment.owner){
         this.owner = new UserJson(apartment.owner);

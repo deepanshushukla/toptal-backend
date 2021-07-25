@@ -1,4 +1,5 @@
 const url = require('url');
+const axios = require('axios');
 const Apartment = require('../models/apartmentModel');
 const { ApartmentJson } =  require('../helper/jsonHelper');
 const customLabels = {
@@ -9,10 +10,10 @@ const customLabels = {
 exports.createApartments = async (req, res, next) => {
     try {
         const { apartmentName, apartmentDescription, floorAreaSize, 
-            pricePerMonth, numberOfRooms, geoLocation, address, isRented } = req.body;
+            pricePerMonth, numberOfRooms, geoLocation, isRented } = req.body;
         const owner = req.user;
         const newApartment = new Apartment({ apartmentName, apartmentDescription, floorAreaSize,
-            pricePerMonth, numberOfRooms, geoLocation, owner, address, isRented});
+            pricePerMonth, numberOfRooms, geoLocation, owner, isRented});
         await newApartment.save();
         return res.status(200).json({data: new ApartmentJson(newApartment)});
     } catch (error) {
