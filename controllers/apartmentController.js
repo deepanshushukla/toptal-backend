@@ -35,9 +35,11 @@ exports.updateApartment = async (req, res, next) => {
     }
 };
 exports.getApartments = async (req, res, next) => {
+
             const filter = req.user.role === "client" ? {isRented: false} : {};
             const queryParams = url.parse(req.url,true).query;
-            const {page, limit} = queryParams;
+
+            const {page, limit, numberOfRooms, pricePerMonth, floorAreaSize} = queryParams;
             const options = {
                 page,
                 limit,
@@ -45,8 +47,28 @@ exports.getApartments = async (req, res, next) => {
                 populate:'owner',
                 customLabels
             };
+            const floorAreaSizeArr = floorAreaSize && floorAreaSize.split(",");
+            const pricePerMonthArr = pricePerMonth && pricePerMonth.split(",");
 
-    Apartment.paginate(filter, options, function (err, {apartments, totalCount, page}) {
+            filters = {
+                ...filter,
+                ...(floorAreaSize && {
+                    floorAreaSize: {
+                        $gte: floorAreaSizeArr[0],
+                        $lte: floorAreaSizeArr[1],
+                    }
+                }), 
+                ...(pricePerMonth && {
+                    pricePerMonth: {
+                        $gte: pricePerMonthArr[0],
+                        $lte: pricePerMonthArr[1],
+                    }
+                }),
+                ...(numberOfRooms && {numberOfRooms:numberOfRooms})
+            };
+            
+    Apartment.paginate(filters,
+        options, function (err, {apartments, totalCount, page}) {
             if (err) next(err);
             return res.status(200).json({
                 data: {
