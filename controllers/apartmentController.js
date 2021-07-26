@@ -35,7 +35,6 @@ exports.updateApartment = async (req, res, next) => {
     }
 };
 exports.getApartments = async (req, res, next) => {
-
             const filter = req.user.role === "client" ? {isRented: false} : {};
             const queryParams = url.parse(req.url,true).query;
 

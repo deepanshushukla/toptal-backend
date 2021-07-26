@@ -38,23 +38,10 @@ exports.saveUser = async (req, res, next) => {
         const { email, role, firstName, lastName, phoneNumber } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
-            const tempPassword = generatePassword();
-            const mailOptions = {
-                to : email,
-                subject : 'Your account password',
-                text : `Your password is ${tempPassword}`
-            };
-            console.log(mailOptions)
-            const hashedPassword = await hashPassword(tempPassword);
-            console.log(hashedPassword)
-            const newUser = new User({email, phoneNumber, password: hashedPassword,firstName, lastName, role});
+            const newUser = new User({email, phoneNumber,firstName, lastName, role});
             await newUser.save();
-            sendMail(mailOptions, () => {
-                res.json({data: new UserJson(newUser, false),message:'Email has been Sent with password'})
-            }, (error) => {
-                console.log(error)
-                next(error);
-            });
+            res.json({data: new UserJson(newUser, false), message:'Successfully created new user'})
+
         }else {
             next(new Error("User Already Exists"))
         }
@@ -62,13 +49,52 @@ exports.saveUser = async (req, res, next) => {
         next(error)
     }
 }
+exports.forgotPassword = async (req, res, next) =>{
+    //generate 8 digit random token
+    const token =  Math.floor(10000000 + Math.random() * 90000000).toString();
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return next(new Error('Email does not exist'));
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now()+ 3600000; // set expiry for one hour
+    user.save((err) => {
+        if (err) return next(err);
+        const mailOptions = {
+            to : email,
+            subject : 'Toptal app Password Reset',
+            text : `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n
+                Please click on the following link, or paste this into your browser to complete the process:\n
+                ${req.headers.origin}/auth/resetPassword/${token}\n
+                If you did not request this, please ignore this email and your password will remain unchanged.`
+        };
+        sendMail(mailOptions, () => {
+            res.json({data: null, message:'Email has been Sent with token'})
+        }, (error) => {
+            next(error);
+        });
+    });
+}
+exports.resetPassword = async (req, res, next) => {
+    const { password ,token } = req.body;
+    const user =  await User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
+    if (!user) return next(new Error('Password token is invalid or expired.'));
+    if (!password) return next(new Error('Password field is mandatory'));
+    const hashedPassword = await hashPassword(req.body.password);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.save((err) => {
+        if (err) return next(err);
+        res.json({data: null, message:'Your Password has been successfully changed'})
+    });
+}
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) return next(new Error('Email does not exist'));
         const validPassword = await validatePassword(password, user.password);
-        if (!validPassword) return next(new Error('Password is not correct'))
+        if (!validPassword) return res.status(401).json({error: "Password is not correct"});
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
             expiresIn: "1d"
         });

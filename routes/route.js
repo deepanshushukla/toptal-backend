@@ -1,12 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const {signUp, login, allowIfLoggedin, getUser, grantAccess, 
-    getUsers, updateUser, deleteUser, saveUser} = require('../controllers/userController');
+    getUsers, updateUser, deleteUser, saveUser, forgotPassword, resetPassword} = require('../controllers/userController');
 const {createApartments, getApartments,deleteApartment,updateApartment} = require('../controllers/apartmentController');
 
 router.post('/signup', signUp);
 
 router.post('/login', login);
+
+router.post('/users/forgotPassword', forgotPassword);
+
+router.post('/users/resetPassword', resetPassword);
 
 router.get('/users/:userId', allowIfLoggedin, getUser);
 

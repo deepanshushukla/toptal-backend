@@ -19,10 +19,8 @@ function ApartmentJson (apartment) {
     this.numberOfRooms = apartment.numberOfRooms;
     this.geoLocation = apartment.geoLocation;
     this.createdAt = apartment.createdAt;
-    if(apartment.owner){
-        this.owner = new UserJson(apartment.owner);
-    }
+    this.owner = apartment.owner ? new UserJson(apartment.owner) :{}
     this.isRented = apartment.isRented;
 };
 
-module.exports =  {ApartmentJson,UserJson}
+module.exports =  {ApartmentJson,UserJson};

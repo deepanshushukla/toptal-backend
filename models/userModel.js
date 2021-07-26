@@ -32,7 +32,9 @@ const UserSchema = Schema({
     },
     accessToken: {
         type: String
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
 },{timestamps : true});
 
 const User = mongoose.model('user', UserSchema);
