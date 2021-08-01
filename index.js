@@ -3,8 +3,12 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const path = require('path')
 const User = require('./models/userModel')
-const routes = require('./routes/route.js');
+const routes = require('./routes');
+const errorHandler = require('./helper/error');
 const cors = require('cors');
+const MESSAGES = require('./constants/messages');
+const STATUS_CODES = require('./constants/statusCodes');
+const ErrorResponse = require("./helper/errorResponse");
 
 require("dotenv").config({
     path: path.join(__dirname, ".env")
@@ -14,9 +18,9 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-const errorHandler =  (err, req, res, next) => {
-     res.status(500).json({ error: err.message });
-}
+// const errorHandler =  (err, req, res, next) => {
+//      res.status(500).json({ message: err.message });
+// };
 mongoose
     .connect('mongodb://localhost:27017/toptal-housing')
     .then(() => {
@@ -31,21 +35,26 @@ app.use(async (req, res, next) => {
         const accessToken = req.headers["authorization"];
         try {
             const {userId, exp} = await jwt.verify(accessToken, process.env.JWT_SECRET);
+
             // Check if token has expired
             if (exp < Date.now().valueOf() / 1000) {
-                return res.status(401).json({error: "JWT token has expired, please login to obtain a new one"});
+                return next(new ErrorResponse(MESSAGES.TOKEN_EXPIRED, STATUS_CODES.UNAUTHORIZED_USER));
+            }
+            const user = await User.findById(userId);
+            if(!user){
+                return next(new ErrorResponse(MESSAGES.NO_USER_WITH_TOKEN, STATUS_CODES.UNAUTHORIZED_USER));
             }
             res.locals.loggedInUser = await User.findById(userId);
             next();
         }catch(e){
-            return res.status(401).json({error: "JWT token has expired, please login to obtain a new one"});
+            return next(new ErrorResponse(MESSAGES.TOKEN_EXPIRED, STATUS_CODES.UNAUTHORIZED_USER));
         }
     } else {
         next();
     }
 });
-
-app.use('/', routes);
+app.use("/users", routes.users);
+app.use("/apartments", routes.apartment);
 
 app.use(errorHandler);
 

@@ -1,7 +1,10 @@
 const url = require('url');
 const axios = require('axios');
+const MESSAGES = require('../constants/messages');
+const ROLES = require('../constants/userRoles');
 const Apartment = require('../models/apartmentModel');
 const { ApartmentJson } =  require('../helper/jsonHelper');
+
 const customLabels = {
     docs: 'apartments',
     totalDocs: 'totalCount',
@@ -15,7 +18,7 @@ exports.createApartments = async (req, res, next) => {
         const newApartment = new Apartment({ apartmentName, apartmentDescription, floorAreaSize,
             pricePerMonth, numberOfRooms, geoLocation, owner, isRented});
         await newApartment.save();
-        return res.status(200).json({data: new ApartmentJson(newApartment)});
+        return res.status(200).json({data: new ApartmentJson(newApartment), message:MESSAGES.APARTMENT_CREATED_SUCCESS});
     } catch (error) {
         next(error)
     }
@@ -28,14 +31,15 @@ exports.updateApartment = async (req, res, next) => {
         const apartment = await Apartment.findById(id);
         return res.status(200).json({
             data: new ApartmentJson(apartment),
-            message: 'Apartment details has been updated'
+            message: MESSAGES.APARTMENT_DETAILS_UPDATED
         });
     } catch (error) {
         next(error)
     }
 };
 exports.getApartments = async (req, res, next) => {
-            const filter = req.user.role === "client" ? {isRented: false} : {};
+            let filter = req.user.role === ROLES.CLIENT ? {isRented: false} : {};
+                filter = req.user.role === ROLES.REALTOR ? {owner: req.user.id} : {};
             const queryParams = url.parse(req.url,true).query;
 
             const {page, limit, numberOfRooms, pricePerMonth, floorAreaSize} = queryParams;
@@ -69,6 +73,7 @@ exports.getApartments = async (req, res, next) => {
     Apartment.paginate(filters,
         options, function (err, {apartments, totalCount, page}) {
             if (err) next(err);
+            console.log(apartments);
             return res.status(200).json({
                 data: {
                     apartments:apartments.map((apartment) => {
@@ -88,7 +93,7 @@ exports.deleteApartment = async (req, res, next) => {
         await Apartment.findByIdAndDelete(apartMentId);
         return res.status(200).json({
             data: null,
-            message: 'Listing has been deleted'
+            message: MESSAGES.APARTMENT_DELETED_SUCCESS
         });
     } catch (error) {
         next(error)
